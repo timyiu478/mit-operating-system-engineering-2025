@@ -4,4 +4,4 @@ For this lecture, read the xv6 implementation of a simple Unix program, cat, ava
 
 You might find it helpful to read chapter 1 of the xv6 book, which provides an overview of a Unix-like operating system. For your amusement, you can also watch a historic AT&T film about Unix.
 
-
+## Answer
