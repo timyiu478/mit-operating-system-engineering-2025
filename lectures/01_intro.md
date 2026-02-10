@@ -10,7 +10,7 @@ Shell:
 * share STDIN, STDOUT, STDERR
 * able to implement shell pipelines & I/O redirection
     * Note: `pipe()` creates/allocates entries (two of them) in the file descriptor table 
-    * Example program: [example/pipe_fd.c](example/pipe_fd.c)
+    * Example program: [examples/pipe_fd.c](examples/pipe_fd.c)
 
 ---
 
