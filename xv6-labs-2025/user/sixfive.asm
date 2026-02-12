@@ -36,9 +36,11 @@ sixfive(int fd)
   int num = 0;
   20:	4481                	li	s1,0
 
+  // Read the input file a character at the time
   while((n = read(fd, &c[0], 1)) > 0) {
   22:	f9840913          	addi	s2,s0,-104
   26:	4985                	li	s3,1
+    // Test if a character matches any of the separators using strchr
     if (strchr(&c[0], ' ') || strchr(&c[0], '-') || strchr(&c[0], '\r') || strchr(&c[0], '\t') || strchr(&c[0], '\n') || strchr(&c[0], '.') || strchr(&c[0], '/')) {
   28:	02000b93          	li	s7,32
       if ((num % 6 == 0 || num % 5 == 0) && isNum == true) {

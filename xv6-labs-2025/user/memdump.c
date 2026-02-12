@@ -60,6 +60,40 @@ main(int argc, char *argv[])
 void
 memdump(char *fmt, char *data)
 {
-  // Your code here.
-
+  for (int i = 0; i < strlen(fmt); i++) {
+    // i: print the next 4 bytes of the data as a 32-bit integer, in decimal.
+    if (fmt[i] == 'i') {
+      int n;
+      memcpy(&n, data, 4);
+      printf("%d\n", n);
+      data += 4;
+    } // p: print the next 8 bytes of the data as a 64-bit integer, in hex.
+    else if (fmt[i] == 'p') {
+      long long n;
+      memcpy(&n, data, 8);
+      printf("%llx\n", n);
+      data += 8;
+    } // h: print the next 2 bytes of the data as a 16-bit integer, in decimal.
+    else if (fmt[i] == 'h') {
+      short n;
+      memcpy(&n, data, 2);
+      printf("%d\n", n);
+      data += 2;
+    } // c: print the next 1 byte of the data as an 8-bit ASCII character.
+    else if (fmt[i] == 'c') {
+      char c;
+      memcpy(&c, data, 1);
+      printf("%c\n", c);
+      data += 1;
+    } // s: the next 8 bytes of the data contain a 64-bit pointer to a C string; print the string.
+    else if (fmt[i] == 's') {
+      char *p;
+      memcpy(&p, data, 8);
+      printf("%s\n", p);
+      data += 8;
+    } // S: the rest of the data contains the bytes of a null-terminated C string; print the string.
+    else if (fmt[i] == 'S') {
+      printf("%s\n", data);
+    }
+  }
 }
