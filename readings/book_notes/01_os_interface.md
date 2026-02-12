@@ -2,7 +2,8 @@
 
 1. How does the kernel use the hardware protection mechanisms provided by CPU? Why can't the user program raise the hardware privilege and then access the hardware directly?
 
-No direct CPU instruction to allow user program to switch from user mode to kernel mode.
+User => Kernel: No direct instruction exists to change the protection register. Only through hardware trap gates (syscall, interrupt, exception) => CPU enforces the switch
+Kernel => User: Kernel uses privileged return instructions (sysret, iret, eret) => CPU allows lowering privilege because the code is already trusted (running in Ring 0)
 
 2. How to avoid the wastefulness of duplicate a process and then immediately replace it?
 
