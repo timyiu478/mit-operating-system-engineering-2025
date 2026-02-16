@@ -84,12 +84,34 @@ $1 = "init", '\000' <repeats 11 times>
 $1 = 1
 ```
 
-# Sandbox a command
-
-
-
 # Sandbox with allowed pathnames
 
+Demo: https://docs.google.com/videos/d/1y_22WZ1cB6Vaj-srdaV-my1rE7fOQr_PspA2xnxB700/play
+
+Implementation Tips:
+
+* How to check if the system call must be rejected: `p->mask & (1 << num)) > 0`.
+* The kernel has a string library.
+
+Test results:
+
+```
+== Test sandbox_mask ==
+$ make qemu-gdb
+sandbox_mask: OK (10.4s)
+== Test sandbox_fork ==
+$ make qemu-gdb
+sandbox_fork: OK (0.8s)
+== Test sandbox_path ==
+$ make qemu-gdb
+sandbox_path: OK (1.4s)
+== Test sandbox_most ==
+$ make qemu-gdb
+sandbox_most: OK (0.7s)
+== Test sandbox_minus ==
+$ make qemu-gdb
+sandbox_minus: OK (0.9s)
+```
 
 
 # Attack xv6
