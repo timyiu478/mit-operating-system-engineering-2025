@@ -1,10 +1,12 @@
 
 xv6 kernel is booting
 
-hart 1 starting
 hart 2 starting
+hart 1 starting
 init: starting sh
-$ secret uLQ3A8Na
+$ secret u7qFNRur
 $ attack
+(null)
+u7qFNRur
 $ attack
-$ qemu-system-riscv64: terminating on signal 15 from pid 17494 (<unknown process>)
+$ qemu-system-riscv64: terminating on signal 15 from pid 20513 (<unknown process>)

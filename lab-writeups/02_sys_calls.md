@@ -115,3 +115,13 @@ sandbox_minus: OK (0.9s)
 
 
 # Attack xv6
+
+Demo: https://docs.google.com/videos/d/1RM-QBXFb2dKL8EyWxIAYm7EyVEgNBfcvU490IFMP5GE/play
+
+Test results:
+
+```
+❯ ./grade-lab-syscall attack
+make: `kernel/kernel' is up to date.
+== Test attack == attack: OK (1.8s)
+```
