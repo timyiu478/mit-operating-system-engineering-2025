@@ -105,3 +105,8 @@ uptime:
  li a7, SYS_uptime
  ecall
  ret
+.global interpose
+interpose:
+ li a7, SYS_interpose
+ ecall
+ ret

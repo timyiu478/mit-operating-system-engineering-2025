@@ -105,3 +105,30 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+
+// "sandbox" a process to restrict the system calls it can make
+// Arguments: an integer mask and a path.
+// The mask's bits specify which system calls to reject.
+// The second argument of sys_interpose is the pathname allowed.
+uint64
+sys_interpose(void)
+{
+  int mask;
+  char path[MAXPATH];
+
+  argint(0, &mask);
+
+  if (argstr(1, path, MAXPATH) < 0) {
+    return -1;
+  }
+
+  struct proc *p = myproc();
+
+  // record the mask and allow path arguments
+  p->mask = mask;
+  memset(p->allowPath, '\0', MAXPATH);
+  strncpy(p->allowPath, path, strlen(path));
+
+  return 0;
+}

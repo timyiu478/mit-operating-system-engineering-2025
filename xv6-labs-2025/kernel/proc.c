@@ -273,6 +273,10 @@ kfork(void)
   }
   np->sz = p->sz;
 
+  // Copy mask and allowPath from parent to child.
+  np->mask = p->mask;
+  strncpy(np->allowPath, p->allowPath, strlen(p->allowPath));
+
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
 
