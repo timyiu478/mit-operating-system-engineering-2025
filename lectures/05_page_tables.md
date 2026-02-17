@@ -36,3 +36,9 @@ Q. Why kernel needs to implement the functions relate to address translation e.g
 
 * create page table entry
 * copy memory from kernel to user process (and vice-versa)
+
+---
+
+Cool tricks of paging mechanism/level of indiretion:
+
+* The guard pages do not really consume any physical memory => no page table entry for them.
