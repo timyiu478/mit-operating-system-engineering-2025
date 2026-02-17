@@ -1,4 +1,4 @@
-Goal: Strong Isolation
+Goal: Strong Isolation, Multiplexing/Tim-sharing, Interaction/Inter-Process Communication
 
 Implementation: OS + hardware support(kernel/user mode, virtual memory)
 
