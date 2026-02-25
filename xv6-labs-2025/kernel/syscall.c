@@ -6,6 +6,9 @@
 #include "proc.h"
 #include "syscall.h"
 #include "defs.h"
+#include "fs.h"
+#include "sleeplock.h"
+#include "file.h"
 
 // Fetch the uint64 at addr from the current process.
 int
@@ -101,7 +104,17 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
-extern uint64 sys_interpose(void);
+
+#ifdef LAB_NET
+extern uint64 sys_bind(void);
+extern uint64 sys_unbind(void);
+extern uint64 sys_send(void);
+extern uint64 sys_recv(void);
+#endif
+#ifdef LAB_PGTBL
+extern uint64 sys_pgpte(void);
+extern uint64 sys_kpgtbl(void);
+#endif
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -127,37 +140,27 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
-[SYS_interpose]   sys_interpose,
+#ifdef LAB_NET
+[SYS_bind] sys_bind,
+[SYS_unbind] sys_unbind,
+[SYS_send] sys_send,
+[SYS_recv] sys_recv,
+#endif
+#ifdef LAB_PGTBL
+[SYS_pgpte] sys_pgpte,
+[SYS_kpgtbl] sys_kpgtbl,
+#endif
 };
+
 
 void
 syscall(void)
 {
   int num;
-  char path[MAXPATH];
   struct proc *p = myproc();
 
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    // Check if the system call must be rejected
-    if ((p->mask & (1 << num)) > 0) {
-      // Check if the pathname matches the allowed pathname
-      if (num == SYS_open || num == SYS_exec) {
-        // Get the path argument
-        if(argstr(0, path, MAXPATH) < 0) {
-          p->trapframe->a0 = -1;
-          return;
-        }
-        int len = strlen(p->allowPath);
-        if (strncmp(path, p->allowPath, len) == 0 && (path[len] == '/' || path[len] == '\0')) {
-          p->trapframe->a0 = syscalls[num]();
-          return;
-        }
-      }
-      // Reject the system call
-      p->trapframe->a0 = -1;
-      return;
-    }
     // Use num to lookup the system call function for num, call it,
     // and store its return value in p->trapframe->a0
     p->trapframe->a0 = syscalls[num]();
