@@ -15,6 +15,7 @@
 // the kernel uses physical memory thus:
 // 80000000 -- entry.S, then kernel text and data
 // end -- start of kernel page allocation area
+// SMALLPGSTOP -- end of the kernel 2-kB pages, start of the kernel 4-MB pages
 // PHYSTOP -- end RAM used by the kernel
 
 // qemu puts UART registers here in physical memory.
@@ -42,6 +43,7 @@
 // from physical address 0x80000000 to PHYSTOP.
 #define KERNBASE 0x80000000L
 #define PHYSTOP (KERNBASE + 128*1024*1024)
+#define SMALLPGSTOP (PHYSTOP - 32*1024*1024)
 
 // map the trampoline page to the highest address,
 // in both user and kernel space.

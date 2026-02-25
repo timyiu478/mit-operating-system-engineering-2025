@@ -10,6 +10,7 @@
 #include "defs.h"
 
 void freerange(void *pa_start, void *pa_end);
+void superfreerange(void *pa_start, void *pa_end);
 
 extern char end[]; // first address after kernel.
                    // defined by kernel.ld.
@@ -23,11 +24,18 @@ struct {
   struct run *freelist;
 } kmem;
 
+struct {
+  struct spinlock lock;
+  struct run *freelist;
+} supmem;
+
 void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
-  freerange(end, (void*)PHYSTOP);
+  initlock(&supmem.lock, "supmem");
+  freerange(end, (void*)SMALLPGSTOP);
+  superfreerange((void*)SMALLPGSTOP, (void*)PHYSTOP);
 }
 
 void
@@ -39,6 +47,15 @@ freerange(void *pa_start, void *pa_end)
     kfree(p);
 }
 
+void
+superfreerange(void *pa_start, void *pa_end)
+{
+  char *p;
+  p = (char*)SUPERPGROUNDUP((uint64)pa_start);
+  for(; p + SUPERPGSIZE <= (char*)pa_end; p += SUPERPGSIZE)
+    superfree(p);
+}
+
 // Free the page of physical memory pointed at by pa,
 // which normally should have been returned by a
 // call to kalloc().  (The exception is when
@@ -48,7 +65,7 @@ kfree(void *pa)
 {
   struct run *r;
 
-  if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
+  if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= SMALLPGSTOP)
     panic("kfree");
 
   // Fill with junk to catch dangling refs.
@@ -79,4 +96,47 @@ kalloc(void)
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
+}
+
+
+// Allocate one 2 MB page of physical memory.
+// Returns a pointer that the kernel can use.
+// Returns 0 if the memory cannot be allocated.
+void *
+superalloc(void)
+{
+  struct run *r;
+
+  acquire(&supmem.lock);
+  r = supmem.freelist;
+  if(r)
+    supmem.freelist = r->next;
+  release(&supmem.lock);
+
+  if(r)
+    memset((char*)r, 5, SUPERPGSIZE); // fill with junk
+  return (void*)r;
+}
+
+// Free the page of physical memory pointed at by pa,
+// which normally should have been returned by a
+// call to superalloc().  (The exception is when
+// initializing the allocator; see kinit above.)
+void
+superfree(void *pa)
+{
+  struct run *r;
+
+  if(((uint64)pa % SUPERPGSIZE) != 0 || (uint64)pa < SMALLPGSTOP || (uint64)pa >= PHYSTOP)
+    panic("superfree");
+
+  // Fill with junk to catch dangling refs.
+  memset(pa, 1, SUPERPGSIZE);
+
+  r = (struct run*)pa;
+
+  acquire(&supmem.lock);
+  r->next = supmem.freelist;
+  supmem.freelist = r;
+  release(&supmem.lock);
 }
