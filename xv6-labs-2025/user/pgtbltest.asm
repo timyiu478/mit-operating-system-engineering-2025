@@ -551,7 +551,7 @@ superpg_free()
  3d8:	0aa91963          	bne	s2,a0,48a <superpg_free+0x12a>
     err("not a super page");
   }
-  
+
   // write to the last 8192-byte section of a super page
   * (a - PGSIZE + 1) = '8';
  3dc:	797d                	lui	s2,0xfffff
