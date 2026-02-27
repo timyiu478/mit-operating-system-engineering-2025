@@ -1,3 +1,5 @@
+# Question
+
 For this lecture, read the following files in the xv6 kernel implementation:
 
 - kernel/riscv.h
@@ -24,3 +26,7 @@ Open the file kernel/kernel.asm, and look for the line _trampoline, which is whe
 
 After the CPU executes csrw satp, t1, the CPU will translate 0x80006096, which holds the next instruction, using the kernel page table (t1 holds the address of the kernel page table; see trampoline.S). How come that this address 0x80006096 in both the user and the kernel page table translates to a physical address that holds sfence.vma?
 You may find chapter 4 of the book useful in understanding how transition between user space and kernel space on a RISC-V CPU.
+
+# Answer
+
+The reason why the address 0x80006096 in both the user and the kernel page table translates to a physical address that holds sfence.vma is this address is in the trampoline page and the virtual-to-physical mapping for the trampoline virtual address is identical in both user and kernel page tables.
