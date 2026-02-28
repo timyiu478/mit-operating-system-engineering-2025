@@ -72,6 +72,11 @@ It will print the value that register a2 holds.
 
 # 2. Backtrace
 
+DEMO: https://docs.google.com/videos/d/1B8hMRi2w194GB9qKZXVOa2tIJDxAm-IeN7xu5j-elhk/play
 
+Tips:
+
+* We are back tracing the kernel stack rather than user stack!
+* Stack frame, visually: https://pdos.csail.mit.edu/6.828/2024/lec/l-riscv-cc-slides.pdf
 
 # 3. Alarm
