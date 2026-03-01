@@ -82,14 +82,17 @@ usertrap(void)
 
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2) {
-    if (p->ticks < p->interval && p->sigreturn) {
+    if (!p->sigreturn || (p->interval == 0 && p->handler == 0)) {
+      // Do not call the handler again if it is not yet returned
+      // OR
+      // No registered user-level interrupt/fault handler
+    } else if (p->ticks < p->interval && p->sigreturn) {
       p->ticks++;
     } else if (p->sigreturn) {
       // save trapframe
       memmove(p->saved_trapframe, p->trapframe, sizeof(struct trapframe));
       // change pc to user-level interrrupt handler 
       p->trapframe->epc = p->handler;
-
       // prevent re-entrant calls to the handler
       p->sigreturn = false;
     }
