@@ -12,3 +12,4 @@ My completed projects at a glance:
 1. Xv6 and Unix utilities - [demo](lab-writeups/01_utilities.md)
 2. System calls - [demo](lab-writeups/02_sys_calls.md)
 3. Page tables - [demo](lab-writeups/03_page_tables.md)
+4. User-level interrupt/fault handlers - [demo](lab-writeups/04_trap.md)
