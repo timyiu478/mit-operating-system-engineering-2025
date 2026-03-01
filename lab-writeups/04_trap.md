@@ -85,6 +85,9 @@ Tips:
 
 Related source code: 
 
+* https://github.com/timyiu478/mit-operating-system-engineering-2025/commit/9755d38a8d74f6376441ccfd5bd2b9e9b21e84f9
+* https://github.com/timyiu478/mit-operating-system-engineering-2025/commit/32c562334bcbe8107f713b5851179b4c21e7ab99
+
 The core idea of invoke handler and resume interrupt code:
 
 When a process's alarm interval expires:
