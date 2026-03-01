@@ -80,3 +80,29 @@ Tips:
 * Stack frame, visually: https://pdos.csail.mit.edu/6.828/2024/lec/l-riscv-cc-slides.pdf
 
 # 3. Alarm
+
+**DEMO:** https://docs.google.com/videos/d/1UIaA-eDPuJf5uu1zyKBF97c9nKmaU8a_d1nFiEQAVP4/play
+
+Related source code: 
+
+The core idea of invoke handler and resume interrupt code:
+
+When a process's alarm interval expires:
+
+1. We save the current trapframe (the complete user state at the moment the timer interrupt occurred) into p->saved_trapframe. This allows us to restore the original user context later.
+2. We redirect execution to the user-defined handler by setting trapframe->epc = p->alarm_handler.
+
+When the user alarm handler finishes and calls the sigreturn() system call, sys_sigreturn() is invoked. This function re-arm the alarm by setting p->ticks = 0. Also, It copies the saved_trapframe back into the current trapframe. As a result, when the system call returns **(via the normal syscall return path)**, the process resumes exactly at the instruction where it was originally interrupted by the timer.
+
+To prevent sys_sigreturn() from overwriting the original value in a0 (which the interrupted user code may be using), sys_sigreturn() returns the value that was in trapframe->a0 at the time the alarm fired (i.e., the saved a0).
+
+Implementation Challenges:
+
+* resume interrupted code
+
+Tips:
+
+* The definition of tick: one hardware timer interrupt rather than raw CPU clock time.
+* We call the user-level interrupt handler in user mode because if we call the hanlder in kernel mode,
+    * the handler now can use the privilege instructions which can break the system isolation.
+    * wrong page table: the user’s handler function lives at a user virtual address.
