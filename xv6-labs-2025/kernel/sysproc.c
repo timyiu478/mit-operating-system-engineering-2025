@@ -108,3 +108,41 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_sigalarm(void)
+{
+  int interval;
+  uint64 handler;
+  struct proc *p;  
+
+  argint(0, &interval);
+  if(interval < 0)
+    return -1;
+  argaddr(1, &handler);
+
+  p = myproc();
+
+  p->interval = interval;
+  p->handler = handler;
+
+  return 0;
+}
+
+uint64
+sys_sigreturn(void)
+{
+  struct proc *p;  
+
+  p = myproc();
+
+  // re-arm
+  p->ticks = 0;
+  p->sigreturn = true;
+
+  // restore registers by restoring the trapframe
+  memmove(p->trapframe, p->saved_trapframe, sizeof(struct trapframe));
+
+  // restore a0
+  return p->trapframe->a0;
+}

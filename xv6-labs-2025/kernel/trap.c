@@ -81,8 +81,20 @@ usertrap(void)
     kexit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if(which_dev == 2) {
+    if (p->ticks < p->interval && p->sigreturn) {
+      p->ticks++;
+    } else if (p->sigreturn) {
+      // save trapframe
+      memmove(p->saved_trapframe, p->trapframe, sizeof(struct trapframe));
+      // change pc to user-level interrrupt handler 
+      p->trapframe->epc = p->handler;
+
+      // prevent re-entrant calls to the handler
+      p->sigreturn = false;
+    }
     yield();
+  }
 
   prepare_return();
 

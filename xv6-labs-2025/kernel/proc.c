@@ -124,6 +124,10 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->ticks = 0;
+  p->handler = 0;
+  p->interval = 0;
+  p->sigreturn = true;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -132,8 +136,8 @@ found:
     return 0;
   }
 
-  // Allocate a usyscall page.
-  if((p->usyscall = (struct usyscall *)kalloc()) == 0){
+  // Allocate a saved_trapframe page.
+  if((p->saved_trapframe = (struct trapframe *)kalloc()) == 0){
     freeproc(p);
     release(&p->lock);
     return 0;
@@ -146,9 +150,6 @@ found:
     release(&p->lock);
     return 0;
   }
- 
-  // Set up the struct usyscall
-  p->usyscall->pid = p->pid;
 
   // Set up new context to start executing at forkret,
   // which returns to user space.
@@ -168,9 +169,6 @@ freeproc(struct proc *p)
   if(p->trapframe)
     kfree((void*)p->trapframe);
   p->trapframe = 0;
-  if(p->usyscall)
-    kfree((void*)p->usyscall);
-  p->usyscall = 0;
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
   p->pagetable = 0;
@@ -215,15 +213,6 @@ proc_pagetable(struct proc *p)
     return 0;
   }
 
-  // map the USYSCALL page just below the trapframe page, for
-  // storing struct usyscall
-  if(mappages(pagetable, USYSCALL, PGSIZE,
-             (uint64)(p->usyscall), PTE_R | PTE_U) < 0){
-    uvmunmap(pagetable, TRAMPOLINE, 1, 0);
-    uvmfree(pagetable, 0);
-    return 0;
-  }
-
   return pagetable;
 }
 
@@ -234,7 +223,6 @@ proc_freepagetable(pagetable_t pagetable, uint64 sz)
 {
   uvmunmap(pagetable, TRAMPOLINE, 1, 0);
   uvmunmap(pagetable, TRAPFRAME, 1, 0);
-  uvmunmap(pagetable, USYSCALL, 1, 0);
   uvmfree(pagetable, sz);
 }
 
@@ -295,9 +283,15 @@ kfork(void)
     return -1;
   }
   np->sz = p->sz;
+  np->interval = p->interval;
+  np->handler = p->handler;
+  np->ticks = p->ticks;
+  np->sigreturn = p->sigreturn;
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
+  *(np->saved_trapframe) = *(p->saved_trapframe);
+
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
