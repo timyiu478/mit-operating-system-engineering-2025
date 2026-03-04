@@ -29,7 +29,7 @@ Source code: https://github.com/timyiu478/mit-operating-system-engineering-2025/
 
 ## Mistake I made
 
-I somehow think the increase reference count function is only invoked when the page is writable.
+I somehow made the increase reference count function is invoked only if the page is writable.
 We should call it even if the page is read-only because those pages are also mapped by the child.
 
 ```diff
