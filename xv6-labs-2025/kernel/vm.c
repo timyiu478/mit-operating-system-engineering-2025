@@ -287,19 +287,18 @@ uvmfree(pagetable_t pagetable, uint64 sz)
   freewalk(pagetable);
 }
 
-// Given a parent process's page table, copy
-// its memory into a child's page table.
-// Copies both the page table and the
-// physical memory.
+// Given a parent process's page table, map
+// the parent's physical pages into the child,
+// clear PTE_W in the PTEs of both child and parent
+// for pages that have PTE_W set,
+// and set the CoW bit in the PTEs of both child and parent
 // returns 0 on success, -1 on failure.
-// frees any allocated pages on failure.
 int
 uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
 {
   pte_t *pte;
   uint64 pa, i;
   uint flags;
-  char *mem;
 
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walk(old, i, 0)) == 0)
@@ -308,13 +307,26 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
       continue;   // physical page hasn't been allocated
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
-      goto err;
-    memmove(mem, (char*)pa, PGSIZE);
-    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
-      kfree(mem);
+
+    // only make COW if it was writable.
+    // read-only pages (code, etc.) are simply shared as-is.
+    if(flags & PTE_W){
+      flags &= ~PTE_W;
+      flags |= PTE_C;
+    }
+    // map the parent's physical page into the child
+    if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){
       goto err;
     }
+    // update parent PTE to CoW
+    // increase reference count
+    // Note: we update them after the mapping successed
+    // so that only need to clean up child if err
+    if((flags & PTE_C) && !(flags & PTE_W)){
+      *pte = PA2PTE(pa) | flags;
+      sfence_vma();
+    }
+    kincref(pa);
   }
   return 0;
 
@@ -343,6 +355,7 @@ int
 copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 {
   uint64 n, va0, pa0;
+  uint flags;
   pte_t *pte;
 
   while(len > 0){
@@ -358,6 +371,15 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
     }
 
     pte = walk(pagetable, va0, 0);
+    flags = PTE_FLAGS(*pte);
+
+    // handle CoW page 
+    if(flags & PTE_C){
+      if((pa0 = vmfault(pagetable, va0, 0)) == 0) {
+        return -1;
+      }
+    }
+
     // forbid copyout over read-only user text pages.
     if((*pte & PTE_W) == 0)
       return -1;
@@ -447,17 +469,46 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 
 // allocate and map user memory if process is referencing a page
 // that was lazily allocated in sys_sbrk().
+// copy COW page and set write bit if process is referencing a
+// COW page.
 // returns 0 if va is invalid or already mapped, or if
 // out of physical memory, and physical address if successful.
 uint64
 vmfault(pagetable_t pagetable, uint64 va, int read)
 {
-  uint64 mem;
+  uint64 mem, pa;
+  uint flags;
+  pte_t *pte = 0;
   struct proc *p = myproc();
 
   if (va >= p->sz)
     return 0;
   va = PGROUNDDOWN(va);
+  if(read == 0 && iscowmapped(pagetable, va, &pte) && *pte != 0) { // is store page fault?
+                                                                   // is COW page?
+    pa = PTE2PA(*pte);
+    flags = PTE_FLAGS(*pte);
+
+    // only reset the PTE flags if the ref count equals to 1
+    if(kref(pa) == 1){ 
+      *pte &= ~PTE_C;
+      *pte |= PTE_W;
+      return pa;
+    } else {
+      mem = (uint64) kalloc(); // allocate a new page
+      if(mem == 0)
+        return 0;
+      memmove((void *)mem, (void *)pa, PGSIZE); // copy old page to new page
+      uvmunmap(p->pagetable, va, 1, 1);         // unmap CoW page
+      flags &= ~PTE_C; 
+      flags |= PTE_W; 
+      if (mappages(p->pagetable, va, PGSIZE, mem, flags) != 0) { // map copied page
+          kfree((void *)mem);
+          return 0;
+      }
+    }
+    return mem;
+  }
   if(ismapped(pagetable, va)) {
     return 0;
   }
@@ -480,6 +531,22 @@ ismapped(pagetable_t pagetable, uint64 va)
     return 0;
   }
   if (*pte & PTE_V){
+    return 1;
+  }
+  return 0;
+}
+
+// Return 1 and set p = pte if the va is COW mapped
+// Otherwise, return 0
+int
+iscowmapped(pagetable_t pagetable, uint64 va, pte_t **p)
+{
+  pte_t *pte = walk(pagetable, va, 0);
+  if (pte == 0) {
+    return 0;
+  }
+  if (!(*pte & PTE_W) && (*pte & PTE_C) && (*pte & PTE_V)) {
+    *p = pte;
     return 1;
   }
   return 0;
