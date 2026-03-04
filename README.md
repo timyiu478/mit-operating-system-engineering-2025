@@ -13,3 +13,4 @@ My completed projects at a glance:
 2. System calls - [demo](lab-writeups/02_sys_calls.md)
 3. Page tables - [demo](lab-writeups/03_page_tables.md)
 4. User-level interrupt/fault handlers - [demo](lab-writeups/04_trap.md)
+5. Copy-on-Write Fork - [demo](lab-writeups/05_cow.md)

@@ -5,20 +5,12 @@ user/_bttest:     file format elf64-littleriscv
 Disassembly of section .text:
 
 0000000000000000 <main>:
-#include "kernel/stat.h"
-#include "user/user.h"
-
-int
-main(int argc, char *argv[])
-{
    0:	1141                	addi	sp,sp,-16
    2:	e406                	sd	ra,8(sp)
    4:	e022                	sd	s0,0(sp)
    6:	0800                	addi	s0,sp,16
-  pause(1);
    8:	4505                	li	a0,1
    a:	350000ef          	jal	35a <pause>
-  exit(0);
    e:	4501                	li	a0,0
   10:	2ba000ef          	jal	2ca <exit>
 
@@ -713,23 +705,13 @@ uptime:
  368:	8082                	ret
 
 000000000000036a <sigalarm>:
-.global sigalarm
-sigalarm:
- li a7, SYS_sigalarm
  36a:	48d9                	li	a7,22
- ecall
  36c:	00000073          	ecall
- ret
  370:	8082                	ret
 
 0000000000000372 <sigreturn>:
-.global sigreturn
-sigreturn:
- li a7, SYS_sigreturn
  372:	48dd                	li	a7,23
- ecall
  374:	00000073          	ecall
- ret
  378:	8082                	ret
 
 000000000000037a <putc>:
