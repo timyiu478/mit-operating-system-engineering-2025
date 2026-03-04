@@ -104,11 +104,4 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  int  ticks;                  // How many ticks have passed since the last call
-  int  interval;               // Tick interval to trigger the fault handler
-  bool sigreturn;              // Is the fault handler returned?
-  uint64 handler;              // User-level interrupt/fault handler
-
-  struct trapframe *saved_trapframe; // backup trapframe before returning to
-                                     // user-level interrupt handler
 };

@@ -5,18 +5,10 @@ user/_call:     file format elf64-littleriscv
 Disassembly of section .text:
 
 0000000000000000 <g>:
-#include "kernel/param.h"
-#include "kernel/types.h"
-#include "kernel/stat.h"
-#include "user/user.h"
-
-int g(int x) {
    0:	1141                	addi	sp,sp,-16
    2:	e406                	sd	ra,8(sp)
    4:	e022                	sd	s0,0(sp)
    6:	0800                	addi	s0,sp,16
-  return x+3;
-}
    8:	250d                	addiw	a0,a0,3
    a:	60a2                	ld	ra,8(sp)
    c:	6402                	ld	s0,0(sp)
@@ -24,14 +16,10 @@ int g(int x) {
   10:	8082                	ret
 
 0000000000000012 <f>:
-
-int f(int x) {
   12:	1141                	addi	sp,sp,-16
   14:	e406                	sd	ra,8(sp)
   16:	e022                	sd	s0,0(sp)
   18:	0800                	addi	s0,sp,16
-  return g(x);
-}
   1a:	250d                	addiw	a0,a0,3
   1c:	60a2                	ld	ra,8(sp)
   1e:	6402                	ld	s0,0(sp)
@@ -39,19 +27,15 @@ int f(int x) {
   22:	8082                	ret
 
 0000000000000024 <main>:
-
-void main(void) {
   24:	1141                	addi	sp,sp,-16
   26:	e406                	sd	ra,8(sp)
   28:	e022                	sd	s0,0(sp)
   2a:	0800                	addi	s0,sp,16
-  printf("%d %d\n", f(8)+1, 13);
   2c:	4635                	li	a2,13
   2e:	45b1                	li	a1,12
   30:	00001517          	auipc	a0,0x1
   34:	8d050513          	addi	a0,a0,-1840 # 900 <malloc+0xfa>
   38:	716000ef          	jal	74e <printf>
-  exit(0);
   3c:	4501                	li	a0,0
   3e:	2ba000ef          	jal	2f8 <exit>
 
@@ -746,23 +730,13 @@ uptime:
  396:	8082                	ret
 
 0000000000000398 <sigalarm>:
-.global sigalarm
-sigalarm:
- li a7, SYS_sigalarm
  398:	48d9                	li	a7,22
- ecall
  39a:	00000073          	ecall
- ret
  39e:	8082                	ret
 
 00000000000003a0 <sigreturn>:
-.global sigreturn
-sigreturn:
- li a7, SYS_sigreturn
  3a0:	48dd                	li	a7,23
- ecall
  3a2:	00000073          	ecall
- ret
  3a6:	8082                	ret
 
 00000000000003a8 <putc>:

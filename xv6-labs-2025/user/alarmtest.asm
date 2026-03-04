@@ -1236,23 +1236,13 @@ uptime:
  7ca:	8082                	ret
 
 00000000000007cc <sigalarm>:
-.global sigalarm
-sigalarm:
- li a7, SYS_sigalarm
  7cc:	48d9                	li	a7,22
- ecall
  7ce:	00000073          	ecall
- ret
  7d2:	8082                	ret
 
 00000000000007d4 <sigreturn>:
-.global sigreturn
-sigreturn:
- li a7, SYS_sigreturn
  7d4:	48dd                	li	a7,23
- ecall
  7d6:	00000073          	ecall
- ret
  7da:	8082                	ret
 
 00000000000007dc <putc>:

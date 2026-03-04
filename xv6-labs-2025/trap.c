@@ -70,10 +70,11 @@ usertrap(void)
     // ok
   } else if((r_scause() == 15 || r_scause() == 13) &&
             vmfault(p->pagetable, r_stval(), (r_scause() == 13)? 1 : 0) != 0) {
-    // page fault on lazily-allocated page
+    // page fault on lazily-allocated or CoW page
   } else {
     printf("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);
     printf("            sepc=0x%lx stval=0x%lx\n", r_sepc(), r_stval());
+    printf("            process name=%s\n", p->name);
     setkilled(p);
   }
 
@@ -81,23 +82,8 @@ usertrap(void)
     kexit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2) {
-    if (!p->sigreturn || (p->interval == 0 && p->handler == 0)) {
-      // Do not call the handler again if it is not yet returned
-      // OR
-      // No registered user-level interrupt/fault handler
-    } else if (p->ticks < p->interval && p->sigreturn) {
-      p->ticks++;
-    } else if (p->sigreturn) {
-      // save trapframe
-      memmove(p->saved_trapframe, p->trapframe, sizeof(struct trapframe));
-      // change pc to user-level interrrupt handler 
-      p->trapframe->epc = p->handler;
-      // prevent re-entrant calls to the handler
-      p->sigreturn = false;
-    }
+  if(which_dev == 2)
     yield();
-  }
 
   prepare_return();
 
