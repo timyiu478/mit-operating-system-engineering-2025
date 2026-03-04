@@ -222,8 +222,7 @@ endif
 ifeq ($(LAB),traps)
 UPROGS += \
 	$U/_call\
-	$U/_bttest\
-	$U/_alarmtest
+	$U/_bttest
 endif
 
 ifeq ($(LAB),lazy)

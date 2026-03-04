@@ -124,20 +124,9 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
-  p->ticks = 0;
-  p->handler = 0;
-  p->interval = 0;
-  p->sigreturn = true;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
-    freeproc(p);
-    release(&p->lock);
-    return 0;
-  }
-
-  // Allocate a saved_trapframe page.
-  if((p->saved_trapframe = (struct trapframe *)kalloc()) == 0){
     freeproc(p);
     release(&p->lock);
     return 0;
@@ -283,15 +272,9 @@ kfork(void)
     return -1;
   }
   np->sz = p->sz;
-  np->interval = p->interval;
-  np->handler = p->handler;
-  np->ticks = p->ticks;
-  np->sigreturn = p->sigreturn;
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
-  *(np->saved_trapframe) = *(p->saved_trapframe);
-
 
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
