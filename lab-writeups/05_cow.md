@@ -17,7 +17,7 @@ See https://github.com/timyiu478/mit-operating-system-engineering-2025/commit/f8
 * The 8-bit in the RISC-V PTE is used for determining whether it is a CoW mapping.
 * We use a global array `refcount` in kalloc.c to store the reference counts of the pages. This global variable will be stored in the address below the start address of the dynamic allocation region, so we do not have to worry about allocating a page for storing the reference counts. 
 
-## Questions I have when I was implementing this feature
+## Questions I had when I was implementing this feature
 
 Q1. If text is read-only, how can exec() write new code into it?
 
