@@ -14,3 +14,7 @@ My completed projects at a glance:
 3. Page tables - [demo](lab-writeups/03_page_tables.md)
 4. User-level interrupt/fault handlers - [demo](lab-writeups/04_trap.md)
 5. Copy-on-Write Fork - [demo](lab-writeups/05_cow.md)
+
+# Key Takeaways
+
+* The combination of page table and page fault handling is powerful. It can be used to build many virtual memory features, such as lazy allocation, copy-on-write fork, and on-demand paging.
