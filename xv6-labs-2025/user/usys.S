@@ -105,3 +105,33 @@ uptime:
  li a7, SYS_uptime
  ecall
  ret
+.global bind
+bind:
+ li a7, SYS_bind
+ ecall
+ ret
+.global unbind
+unbind:
+ li a7, SYS_unbind
+ ecall
+ ret
+.global send
+send:
+ li a7, SYS_send
+ ecall
+ ret
+.global recv
+recv:
+ li a7, SYS_recv
+ ecall
+ ret
+.global pgpte
+pgpte:
+ li a7, SYS_pgpte
+ ecall
+ ret
+.global kpgtbl
+kpgtbl:
+ li a7, SYS_kpgtbl
+ ecall
+ ret
