@@ -121,8 +121,9 @@ e1000_transmit(char *buf, int len)
   }
 
   // Use kfree() to free the last buffer that was transmitted from that descriptor (if there was one)
-  if (tx_ring[tail].addr != 0) {
-    kfree((void *)tx_ring[tail].addr);
+  void *last_buf = (void *)tx_ring[tail].addr;
+  if (last_buf != 0) {
+    kfree(last_buf);
   }
 
   // Fill in the descriptor. Set the necessary cmd flags
@@ -156,7 +157,7 @@ e1000_recv(void)
 
   while (true) {
     // Ask the E1000 for the ring index at which the next waiting received packet (if any) is located
-    uint64 next = (regs[E1000_RDT] + 1) % TX_RING_SIZE;
+    uint64 next = (regs[E1000_RDT] + 1) % RX_RING_SIZE;
 
     // Check if a new packet is available
     if (!(rx_ring[next].status & E1000_RXD_STAT_DD)) {
@@ -165,7 +166,9 @@ e1000_recv(void)
     }
 
     // Deliver the packet buffer to the network stack
-    net_rx((char *)rx_ring[next].addr, rx_ring[next].length);
+    char *buf = (char *)rx_ring[next].addr;
+    int len = rx_ring[next].length;
+    net_rx(buf, len);
 
     // Allocate a new buffer using kalloc() to replace the one just given to net_rx()
     rx_ring[next].addr = (uint64) kalloc();
