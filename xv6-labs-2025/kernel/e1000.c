@@ -20,7 +20,7 @@ struct spinlock e1000_lock;
 
 // called by pci_init().
 // xregs is the memory address at which the
-// e1000's registers are mapped.
+// e1002's registers are mapped.
 // this code loosely follows the initialization directions
 // in Chapter 14 of Intel's Software Developer's Manual.
 void
@@ -105,6 +105,35 @@ e1000_transmit(char *buf, int len)
   // so that the caller knows to free buf.
   //
 
+  acquire(&e1000_lock);
+
+  printf("e1000 transmit start\n");
+
+  // Ask the E1000 for the TX ring index at which it's expecting the next packet, by reading the E1000_TDT control register.
+  uint64 tail = regs[E1000_TDT];
+  
+  // Check if the ring is overflowing
+  if (!(tx_ring[tail].status & E1000_TXD_STAT_DD)) {
+    printf("the tx ring is overflowing");
+    return -1;
+  }
+
+  // Use kfree() to free the last buffer that was transmitted from that descriptor (if there was one)
+  if (tx_ring[tail].addr != 0) {
+    kfree((void *)tx_ring[tail].addr);
+  }
+
+  // Fill in the descriptor. Set the necessary cmd flags
+  tx_ring[tail].addr = (uint64) buf;
+  tx_ring[tail].length = len;
+  tx_ring[tail].cmd = E1000_TXD_CMD_RS | E1000_TXD_CMD_EOP;
+   
+  // Update the ring position by adding one to E1000_TDT modulo TX_RING_SIZE
+  regs[E1000_TDT] = (tail + 1 % TX_RING_SIZE);
+
+  printf("e1000 transmit end\n");
+
+  release(&e1000_lock);
   
   return 0;
 }
@@ -118,6 +147,10 @@ e1000_recv(void)
   // Check for packets that have arrived from the e1000
   // Create and deliver a buf for each packet (using net_rx()).
   //
+
+  printf("e1000 recv:");
+
+
 
 }
 
