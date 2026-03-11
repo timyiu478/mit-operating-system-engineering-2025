@@ -17,10 +17,11 @@ static struct rx_desc rx_ring[RX_RING_SIZE] __attribute__((aligned(16)));
 static volatile uint32 *regs;
 
 struct spinlock e1000_lock;
+struct spinlock e1000_lock_rx;
 
 // called by pci_init().
 // xregs is the memory address at which the
-// e1002's registers are mapped.
+// e1003's registers are mapped.
 // this code loosely follows the initialization directions
 // in Chapter 14 of Intel's Software Developer's Manual.
 void
@@ -29,6 +30,7 @@ e1000_init(uint32 *xregs)
   int i;
 
   initlock(&e1000_lock, "e1000");
+  initlock(&e1000_lock_rx, "e1000_rx");
 
   regs = xregs;
 
@@ -107,7 +109,7 @@ e1000_transmit(char *buf, int len)
 
   acquire(&e1000_lock);
 
-  printf("e1000 transmit start\n");
+  // printf("e1000 transmit start\n");
 
   // Ask the E1000 for the TX ring index at which it's expecting the next packet, by reading the E1000_TDT control register.
   uint64 tail = regs[E1000_TDT];
@@ -129,9 +131,9 @@ e1000_transmit(char *buf, int len)
   tx_ring[tail].cmd = E1000_TXD_CMD_RS | E1000_TXD_CMD_EOP;
    
   // Update the ring position by adding one to E1000_TDT modulo TX_RING_SIZE
-  regs[E1000_TDT] = (tail + 1 % TX_RING_SIZE);
+  regs[E1000_TDT] = (tail + 1) % TX_RING_SIZE;
 
-  printf("e1000 transmit end\n");
+  // printf("e1000 transmit end\n");
 
   release(&e1000_lock);
   
@@ -148,10 +150,39 @@ e1000_recv(void)
   // Create and deliver a buf for each packet (using net_rx()).
   //
 
-  printf("e1000 recv:");
+  acquire(&e1000_lock_rx);
+
+  // printf("e1000 recv start\n");
+
+  while (true) {
+    // Ask the E1000 for the ring index at which the next waiting received packet (if any) is located
+    uint64 next = (regs[E1000_RDT] + 1) % TX_RING_SIZE;
+
+    // Check if a new packet is available
+    if (!(rx_ring[next].status & E1000_RXD_STAT_DD)) {
+      // printf("no (more) new packet is available\n");
+      break;
+    }
+
+    // Deliver the packet buffer to the network stack
+    net_rx((char *)rx_ring[next].addr, rx_ring[next].length);
+
+    // Allocate a new buffer using kalloc() to replace the one just given to net_rx()
+    rx_ring[next].addr = (uint64) kalloc();
+    if (!rx_ring[next].addr)
+      panic("e1000_recv");
+
+    // Clear the descriptor's status bits to zero.
+    rx_ring[next].status = 0;
 
 
+    // Update the E1000_RDT register to be the index of the last ring descriptor processed
+    regs[E1000_RDT] = next;
+  }
 
+  // printf("e1000 recv end\n");
+
+  release(&e1000_lock_rx);
 }
 
 void
