@@ -9,8 +9,6 @@
 #include "riscv.h"
 #include "defs.h"
 
-#define NPAGES (PHYSTOP/PGSIZE)
-
 void freerange(void *pa_start, void *pa_end);
 
 extern char end[]; // first address after kernel.
@@ -25,8 +23,6 @@ struct {
   struct run *freelist;
 } kmem;
 
-static int refcount[NPAGES];
-
 void
 kinit()
 {
@@ -39,14 +35,11 @@ freerange(void *pa_start, void *pa_end)
 {
   char *p;
   p = (char*)PGROUNDUP((uint64)pa_start);
-  for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE) {
-    refcount[PA2IDX(p)] = 1;
+  for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
     kfree(p);
-  }
 }
 
-// Free the page of physical memory pointed at by pa
-// if --refcount[PA2IDX(pa) == 0,
+// Free the page of physical memory pointed at by pa,
 // which normally should have been returned by a
 // call to kalloc().  (The exception is when
 // initializing the allocator; see kinit above.)
@@ -54,30 +47,18 @@ void
 kfree(void *pa)
 {
   struct run *r;
-  int idx;
 
-  if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP) {
-    printf("invalid pa: %p\n", pa);
+  if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
-  }
 
-  idx = PA2IDX((uint64)pa);
+  // Fill with junk to catch dangling refs.
+  memset(pa, 1, PGSIZE);
+
+  r = (struct run*)pa;
 
   acquire(&kmem.lock);
-  if(refcount[idx] == 0) { // double free?
-    printf("double free pa: %p\n", pa);
-    panic("kfree");
-  }
-  refcount[idx]--;
-  if(refcount[idx] == 0) {
-    // Fill with junk to catch dangling refs.
-    memset(pa, 1, PGSIZE);
-
-    r = (struct run*)pa;
-  
-    r->next = kmem.freelist;
-    kmem.freelist = r;
-  }
+  r->next = kmem.freelist;
+  kmem.freelist = r;
   release(&kmem.lock);
 }
 
@@ -91,34 +72,11 @@ kalloc(void)
 
   acquire(&kmem.lock);
   r = kmem.freelist;
-  if(r) {
+  if(r)
     kmem.freelist = r->next;
-    if (refcount[PA2IDX((uint64)r)]) {
-      printf("ref count of %p is %d != 1 when kalloc\n", (void *)r, refcount[PA2IDX((uint64)r)]);
-      panic("kalloc");
-    }
-    refcount[PA2IDX((uint64)r)] = 1;
-  }
   release(&kmem.lock);
 
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
-}
-
-// Increase the reference count of the physical memory page by 1
-// Expected caller: vm.c:uvmcopy()
-void
-kincref(uint64 pa)
-{
-  acquire(&kmem.lock);
-  refcount[PA2IDX(pa)]++;
-  release(&kmem.lock);
-}
-
-// Get reference count of pa
-int
-kref(uint64 pa)
-{
-  return refcount[PA2IDX(pa)];
 }

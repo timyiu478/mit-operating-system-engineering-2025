@@ -14,6 +14,7 @@ My completed projects at a glance:
 3. Page tables - [demo](lab-writeups/03_page_tables.md)
 4. User-level interrupt/fault handlers - [demo](lab-writeups/04_trap.md)
 5. Copy-on-Write Fork - [demo](lab-writeups/05_cow.md)
+6. Network Driver - [demo](lab-writeups/06_net_driver.md)
 
 # Key Takeaways
 

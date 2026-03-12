@@ -55,6 +55,9 @@ procinit(void)
       initlock(&p->lock, "proc");
       p->state = UNUSED;
       p->kstack = KSTACK((int) (p - proc));
+      for (int i =0; i < MAXBPORTS; i++) {
+        p->bindedports[i] = -1;
+      }
   }
 }
 
@@ -169,6 +172,11 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+
+  // reset binded ports
+  for (int i =0; i < MAXBPORTS; i++) {
+    p->bindedports[i] = -1;
+  }
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -272,6 +280,11 @@ kfork(void)
     return -1;
   }
   np->sz = p->sz;
+
+  // Copy binded ports
+  for (int i =0; i < MAXBPORTS; i++) {
+    np->bindedports[i] = p->bindedports[i];
+  }
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
