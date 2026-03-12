@@ -178,7 +178,6 @@ e1000_recv(void)
     // Clear the descriptor's status bits to zero.
     rx_ring[next].status = 0;
 
-
     // Update the E1000_RDT register to be the index of the last ring descriptor processed
     regs[E1000_RDT] = next;
   }
