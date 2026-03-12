@@ -80,3 +80,6 @@ QEMU: Terminated
 I found this root cause by rereading my implementation multiple times... 
 I tried to give my implementation to the free-tier LLM models (e.g. Grok) to review, but they were unable to discover it.
 
+## Key Takeaways
+
+* deeper understanding of the user virtual address space, page table, and page fault interrupt.

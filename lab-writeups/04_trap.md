@@ -109,3 +109,9 @@ Tips:
 * We call the user-level interrupt handler in user mode because if we call the hanlder in kernel mode,
     * the handler now can use the privilege instructions which can break the system isolation.
     * wrong page table: the user’s handler function lives at a user virtual address.
+
+# Key takeaways
+
+* The core idea of invoke handler and resume interrupt code 
+    * invoke handler: save current trapframe, update program counter to redirect execution
+    * resume interrupt code: user program calls sigreturn(), restore the saved trapframe

@@ -225,3 +225,7 @@ unmap range:           [----------]               <=  starts in middle, ends in 
 ```
 
 Note: **the implementation is not bug-free, even though it passes all the tests!**
+
+# Key takeaways
+
+* How to support 2 different size of memory page using the same page table mechanism

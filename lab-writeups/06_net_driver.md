@@ -36,3 +36,8 @@ As packets arrive, they are stored in memory and the head pointer is **increment
 
 Ref: section 3.2.6 of E1000 Software Developer's Manual
 
+
+## Key Takeaways
+
+* Buffer ownership: once the buffer is passed to high level driver(net.c)/lower level driver(e1000.c), the one who receives the buffer is the owner of the buffer and the owner is responsible to clean it up after it is used (e.g. copyed to user space, transmitted by NIC).
+* How does the NIC and kernel driver coordinate using ring buffers, memory-mapped IO, and DMA.

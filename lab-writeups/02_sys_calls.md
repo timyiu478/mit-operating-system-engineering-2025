@@ -125,3 +125,7 @@ Test results:
 make: `kernel/kernel' is up to date.
 == Test attack == attack: OK (1.8s)
 ```
+
+# Key takeways
+
+* the syscall execution path
