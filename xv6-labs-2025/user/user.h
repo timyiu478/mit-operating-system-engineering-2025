@@ -40,6 +40,10 @@ int ugetpid(void);
 uint64 pgpte(void*);
 void kpgtbl(void);
 #endif
+#ifdef LAB_LOCK
+int rwlktest(void);
+int cpupin(int);
+#endif
 
 // ulib.c
 int stat(const char*, struct stat*);

@@ -177,20 +177,27 @@ write_release(struct rwspinlock *rwlk)
   pop_off();
 }
 
+void
+initrwlock(struct rwspinlock *rwlk)
+{
+  // Replace this with your implementation.
+  initlock(&rwlk->l, "rwlk");
+}
+
 // Test rwspinlock implementation.
 static void
-rwspinlock_test_step(uint step)
+rwspinlock_test_step(uint step, const char *msg)
 {
   static uint barrier;
-  const uint ncpu = 3;
+  const uint ncpu = 4;
 
   __atomic_fetch_add(&barrier, 1, __ATOMIC_ACQ_REL);
-  while (__atomic_load_n(&barrier, __ATOMIC_RELAXED) != ncpu * step) {
+  while (__atomic_load_n(&barrier, __ATOMIC_RELAXED) < ncpu * step) {
     // spin
   }
 
   if (cpuid() == 0) {
-    printf("rwspinlock_test: step %d\n", step);
+    printf("rwspinlock_test: step %d: %s\n", step, msg);
   }
 }
 
@@ -204,24 +211,33 @@ delay()
   return __atomic_load_n(&v, __ATOMIC_RELAXED);
 }
 
-void
-rwspinlock_test()
+uint64
+sys_rwlktest()
 {
+  int r = 0;
+  int step = 0;
+
   push_off();
   int id = cpuid();
 
-  rwspinlock_test_step(1);
+  rwspinlock_test_step(++step, "initrwlock");
 
   static struct rwspinlock l;
+  if (id == 0) {
+    initrwlock(&l);
+  }
+
+  rwspinlock_test_step(++step, "concurrent read_acquire");
+
   for (int i = 0; i < 1000000; i++)
     read_acquire(&l);
 
-  rwspinlock_test_step(2);
+  rwspinlock_test_step(++step, "concurrent read_release");
 
   for (int i = 0; i < 1000000; i++)
     read_release(&l);
 
-  rwspinlock_test_step(3);
+  rwspinlock_test_step(++step, "prepare read_acquire for writer priority test");
 
   if (id == 1) {
     for (int i = 0; i < 30; i++) {
@@ -229,7 +245,7 @@ rwspinlock_test()
     }
   }
 
-  rwspinlock_test_step(4);
+  rwspinlock_test_step(++step, "writer priority test");
 
   static uint flag;
   if (id == 0) {
@@ -259,11 +275,12 @@ rwspinlock_test()
     uint f = __atomic_load_n(&flag, __ATOMIC_RELAXED);
     if (f == 0) {
       printf("rwspinlock_test: reader sneaked ahead of waiting writer\n");
+      r = -1;
     }
     read_release(&l);
   }
 
-  rwspinlock_test_step(5);
+  rwspinlock_test_step(++step, "checking for concurrent readers/writers");
 
   static uint v;
   if (id == 0) {
@@ -282,6 +299,7 @@ rwspinlock_test()
     }
     if (maxwv > 1) {
       printf("rwspinlock_test: cpu %d saw concurrent reads/writes: %d\n", id, maxwv);
+      r = -1;
     }
   } else {
     uint maxrv = 0;
@@ -299,10 +317,11 @@ rwspinlock_test()
     }
     if (maxrv < 2) {
       printf("rwspinlock_test: cpu %d never saw concurrent reads: %d\n", id, maxrv);
+      r = -1;
     }
   }
 
-  rwspinlock_test_step(6);
+  rwspinlock_test_step(++step, "checking for concurrent writers");
 
   uint maxwv = 0;
   for (int i = 0; i < 1000000; i++) {
@@ -319,11 +338,79 @@ rwspinlock_test()
   }
   if (maxwv > 1) {
     printf("rwspinlock_test: cpu %d saw concurrent writes: %d\n", id, maxwv);
+    r = -1;
   }
 
-  rwspinlock_test_step(7);
+  rwspinlock_test_step(++step, "acquiring multiple locks");
 
+  struct rwspinlock l2;
+  initrwlock(&l2);
+  write_acquire(&l2);
+  read_acquire(&l);
+
+  rwspinlock_test_step(++step, "releasing multiple locks");
+
+  write_release(&l2);
+  read_release(&l);
+
+  for (int i = 0; i < 10; i++) {
+    rwspinlock_test_step(++step, "prepare read_acquire for multiple writer priority test");
+
+    static uint writer_count;
+    if (id == 3) {
+      writer_count = 0;
+      read_acquire(&l);
+      read_acquire(&l);
+    }
+
+    rwspinlock_test_step(++step, "multiple writer priority test");
+
+    if (id == 0 || id == 1) {
+      write_acquire(&l);
+      writer_count++;
+      delay();
+      write_release(&l);
+    }
+
+    if (id == 2) {
+      delay();
+      read_acquire(&l);
+      if (writer_count == 0) {
+        printf("rwspinlock_test: reader sneaked ahead of both waiting writers\n");
+        r = -1;
+      }
+      delay();
+      delay();
+      delay();
+      read_release(&l);
+    }
+
+    if (id == 3) {
+      delay();
+      read_release(&l);
+      delay();
+      read_release(&l);
+
+      delay();
+      delay();
+
+      // By this point, either one writer executed and CPU 2 is holding read lock,
+      // or both writers executed.  Should never sneak ahead of second writer.
+      read_acquire(&l);
+      if (writer_count != 2) {
+        printf("rwspinlock_test: reader sneaked ahead of second waiting writer\n");
+        r = -1;
+      }
+      read_release(&l);
+    }
+  }
+
+  rwspinlock_test_step(++step, "done");
+
+  printf("rwspinlock_test(%d): %d\n", id, r);
   pop_off();
+
+  return r;
 }
 #endif
 
@@ -394,12 +481,11 @@ statslock(char *buf, int sz) {
   int tot = 0;
 
   acquire(&lock_locks);
-  n = snprintf(buf, sz, "--- lock kmem/bcache stats\n");
+  n = snprintf(buf, sz, "--- lock kmem stats\n");
   for(int i = 0; i < NLOCK; i++) {
     if(locks[i] == 0)
       break;
-    if(strncmp(locks[i]->name, "bcache", strlen("bcache")) == 0 ||
-       strncmp(locks[i]->name, "kmem", strlen("kmem")) == 0) {
+    if(strncmp(locks[i]->name, "kmem", strlen("kmem")) == 0) {
       tot += locks[i]->nts;
       n += snprint_lock(buf +n, sz-n, locks[i]);
     }

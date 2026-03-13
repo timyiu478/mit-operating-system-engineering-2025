@@ -51,8 +51,5 @@ main()
     plicinithart();   // ask PLIC for device interrupts
   }
 
-#ifdef LAB_LOCK
-  rwspinlock_test();
-#endif
   scheduler();        
 }

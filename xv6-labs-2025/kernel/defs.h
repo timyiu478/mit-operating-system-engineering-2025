@@ -122,11 +122,12 @@ void            pop_off(void);
 int             atomic_read4(int *addr);
 #ifdef LAB_LOCK
 void            freelock(struct spinlock*);
+void            initrwlock(struct rwspinlock*);
 void            read_acquire(struct rwspinlock*);
 void            read_release(struct rwspinlock*);
 void            write_acquire(struct rwspinlock*);
 void            write_release(struct rwspinlock*);
-void            rwspinlock_test();
+uint64          sys_rwlktest(void);
 #endif
 
 // sleeplock.c
