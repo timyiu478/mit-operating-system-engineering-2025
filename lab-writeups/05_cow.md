@@ -83,3 +83,6 @@ I tried to give my implementation to the free-tier LLM models (e.g. Grok) to rev
 ## Key Takeaways
 
 * deeper understanding of the user virtual address space, page table, and page fault interrupt.
+    * clear the PTE's write bit
+    * set instruction => page fault intterupt
+    * => interrupt handler does somethings (e.g. set the PTE's write bit) => restart the instruction
