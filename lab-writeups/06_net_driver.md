@@ -25,6 +25,7 @@ Watch https://docs.google.com/videos/d/1aX9uGzmhp_Qd23MEbY2lsk_VeZzW9JcC_lz2VPPo
 
 * Each port has its own ring buffer `port2Ring[port]` and we use `port2Ring[port].r` as the process's sleep channel when the process calls  `sys_recv()` and the receive queue is empty. This allows us to wake up the only correct process when the packet with `dport=port` has arrived. 
 * To support binded ports inheritance, the field `int  bindedports[MAXBPORTS]` is added in the `struct proc`.
+* Use one coarse grained lock `netlock` to protect all `rx_ring` rather than one dedicated lock per port because the total number of locks the kernel can acquire is [500](https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/network_driver/xv6-labs-2025/kernel/spinlock.c#L12) which is less than total number of ports that can be binded.
 
 ## Questions I had when I was working on this lab
 
