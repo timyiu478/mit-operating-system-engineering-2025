@@ -61,13 +61,15 @@ kfree(void *pa)
   r = (struct run*)pa;
 
   push_off();
+
   int cid = cpuid();
-  pop_off();
 
   acquire(&kmems[cid].lock);
   r->next = kmems[cid].freelist;
   kmems[cid].freelist = r;
   release(&kmems[cid].lock);
+
+  pop_off();
 }
 
 // Allocate one 4096-byte page of physical memory.
@@ -79,14 +81,16 @@ kalloc(void)
   struct run *r;
 
   push_off();
+
   int cid = cpuid();
-  pop_off();
 
   acquire(&kmems[cid].lock);
   r = kmems[cid].freelist;
   if(r)
     kmems[cid].freelist = r->next;
-  else { // steal free page from other CPU's free-list
+  release(&kmems[cid].lock);
+
+  if(!r) { // steal free page from other CPU's free-list
     for (int i=0; i < NCPU; i++) {
       if (i == cid)
         continue;
@@ -99,7 +103,8 @@ kalloc(void)
         break;
     }
   }
-  release(&kmems[cid].lock);
+
+  pop_off();
 
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
