@@ -18,15 +18,19 @@ struct run {
   struct run *next;
 };
 
-struct {
+struct kmem {
   struct spinlock lock;
   struct run *freelist;
-} kmem;
+};
+
+struct kmem kmems[NCPU]; // kmem per CPU
 
 void
 kinit()
 {
-  initlock(&kmem.lock, "kmem");
+  for (int i=0; i < NCPU; i++) {
+    initlock(&kmems[i].lock, "kmem");
+  }
   freerange(end, (void*)PHYSTOP);
 }
 
@@ -55,6 +59,8 @@ kfree(void *pa)
   memset(pa, 1, PGSIZE);
 
   r = (struct run*)pa;
+
+
 
   acquire(&kmem.lock);
   r->next = kmem.freelist;
