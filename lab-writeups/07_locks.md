@@ -58,7 +58,7 @@ Implementation reference: https://joeduffyblog.com/2009/01/29/a-singleword-reade
 ### Key Challenges for me
 
 * How to prevent reader sneaked ahead of waiting writer
-    * To solve this challenge, we have to make sure when there is 1 writer or more than 1 pending writers, the writer active flag and writer p ending flag will be both equal 0
+    * To solve this challenge, we have to make sure when there is at least one pending writer, the writer-active flag and the writer-pending flag are NOT both equal to 0
 
 ## Key takeaways
 
