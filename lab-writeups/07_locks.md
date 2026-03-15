@@ -60,6 +60,22 @@ Implementation reference: https://joeduffyblog.com/2009/01/29/a-singleword-reade
 * How to prevent reader sneaked ahead of waiting writer
     * To solve this challenge, we have to make sure when there is at least one pending writer, the writer-active flag and the writer-pending flag are NOT both equal to 0
 
+### Possible operations that can change the state
+
+Invariant: when there is at least one pending writer, the writer-active flag and the writer-pending flag are NOT both equal to 0
+
+* <=: assign value to variable
+
+| Operation                              | Who calls it          | Effect on flags & pending_writers count                                      | Does invariant still hold after? |
+|----------------------------------------|-----------------------|-------------------------------------------------------------------------------|----------------------------------|
+| Reader acquire (successful)            | any reader            | reader count += 1, flags unchanged                                            | Yes (pending_writers unchanged)  |
+| Reader release                         | any reader            | reader count -= 1, flags unchanged                                            | Yes                              |
+| First writer announces interest        | a writer              | PENDING_BIT <= 1 (via fetch_or)                                               | Yes — PENDING_BIT = 1            |
+| Subsequent writers announce            | another writer        | PENDING_BIT <= 1 
+| Writer spins (waiting for readers=0)   | waiting writer        | no change to state or pending count                                           | Yes                              |
+| A writer successfully claims lock      | one waiting writer    | WRITER_BIT <= 1 and PENDING_BIT <= 0 <br>pending_writers -= 1 for this writer  | Yes — WRITER_BIT = 1             |
+| Writer releases lock                   | holding writer        | WRITER_BIT <= 0<br>pending_writers unchanged (others still pending)           | Yes — **if pending_writers >= 1 then PENDING_BIT was already 1 and stays 1** |
+
 ## Key takeaways
 
 * A single-word reader/writer spin lock
