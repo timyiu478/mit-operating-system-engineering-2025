@@ -13,7 +13,7 @@ See https://pdos.csail.mit.edu/6.1810/2025/labs/lock.html
 
 ### Related Source Code
 
-* [kalloc.c]()
+* [kalloc.c](https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/3c51af4168cbfc21f32b19ceb6e4406f7d620a88/xv6-labs-2025/kernel/kalloc.c)
 
 ### Mistakes I made
 
@@ -48,7 +48,7 @@ Implementation reference: https://joeduffyblog.com/2009/01/29/a-singleword-reade
 
 ### Related Source Code
 
-* [spinlock.c]()
+* [spinlock.c](https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/3c51af4168cbfc21f32b19ceb6e4406f7d620a88/xv6-labs-2025/kernel/spinlock.c)
 
 ### Design Choices
 
