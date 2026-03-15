@@ -15,6 +15,7 @@ My completed projects at a glance:
 4. User-level interrupt/fault handlers - [demo](lab-writeups/04_trap.md)
 5. Copy-on-Write Fork - [demo](lab-writeups/05_cow.md)
 6. Network Driver - [demo](lab-writeups/06_net_driver.md)
+7. Per-CPU freelists & Read-write lock - [demo](lab-writeups/07_locks.md)
 
 # Key Takeaways
 
