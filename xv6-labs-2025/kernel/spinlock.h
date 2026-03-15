@@ -12,9 +12,11 @@ struct spinlock {
 };
 
 #ifdef LAB_LOCK
+#define WRITER_BIT (1L << 63)
+#define PENDING_BIT (1L << 62)
+
 // Reader-writer lock.
 struct rwspinlock {
-  // Replace this with your implementation.
-  struct spinlock l;
+  uint64 state;
 };
 #endif

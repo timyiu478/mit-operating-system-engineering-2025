@@ -124,29 +124,54 @@ release(struct spinlock *lk)
 static void
 read_acquire_inner(struct rwspinlock *rwlk)
 {
-  // Replace this with your implementation.
-  acquire(&rwlk->l);
+  uint64 s;
+  uint64 new_s;
+
+  while (true) {
+    s = __atomic_load_n(&rwlk->state, __ATOMIC_SEQ_CST);
+
+    if ((s & WRITER_BIT) != 0 || (s & PENDING_BIT) != 0) {
+      continue;
+    }
+
+    new_s = s + 1;
+
+    if (__atomic_compare_exchange_n(&rwlk->state, &s, new_s, false, __ATOMIC_SEQ_CST, __ATOMIC_RELAXED)) {
+        return;
+    }
+  }
 }
 
 static void
 read_release_inner(struct rwspinlock *rwlk)
 {
-  // Replace this with your implementation.
-  release(&rwlk->l);
+  __atomic_fetch_sub(&rwlk->state, 1,__ATOMIC_SEQ_CST);
 }
 
 static void
 write_acquire_inner(struct rwspinlock *rwlk)
 {
-  // Replace this with your implementation.
-  acquire(&rwlk->l);
+  uint64 s;
+
+  while (true) {
+    s = __atomic_load_n(&rwlk->state, __ATOMIC_SEQ_CST);
+    if ((s & PENDING_BIT) == 0) {
+      __atomic_fetch_or(&rwlk->state, PENDING_BIT, __ATOMIC_ACQ_REL);
+    }
+    if ((s & ~PENDING_BIT) != 0) {
+      continue;
+    }
+
+    if (__atomic_compare_exchange_n(&rwlk->state, &s, WRITER_BIT, false, __ATOMIC_SEQ_CST, __ATOMIC_RELAXED)) {
+        return;
+    }
+  }
 }
 
 static void
 write_release_inner(struct rwspinlock *rwlk)
 {
-  // Replace this with your implementation.
-  release(&rwlk->l);
+  __atomic_fetch_and(&rwlk->state, ~WRITER_BIT,__ATOMIC_SEQ_CST);
 }
 
 void
@@ -180,8 +205,7 @@ write_release(struct rwspinlock *rwlk)
 void
 initrwlock(struct rwspinlock *rwlk)
 {
-  // Replace this with your implementation.
-  initlock(&rwlk->l, "rwlk");
+  __atomic_store_n(&rwlk->state, 0, __ATOMIC_SEQ_CST);
 }
 
 // Test rwspinlock implementation.
