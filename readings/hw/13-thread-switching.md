@@ -10,3 +10,9 @@ yield() calls acquire(&p->lock) to lock the current process p. Which line of cod
 You may find chapter 8 of the book useful in understanding how the kernel implements thread switching.
 
 # Answer
+
+The [proc.c:456](https://github.com/mit-pdos/xv6-riscv/blob/riscv/kernel/proc.c#L456) is the line of code releases that lock.
+
+Verified using GDB:
+
+![](assets/return-addr-of-switch-to-scheduler.png)
