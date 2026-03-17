@@ -48,3 +48,13 @@ kvminithart():
 
 * why calling sfence_vma() can wait for previous writes to page table memory to finish?
 * each CPU has its own satp register? Yes
+
+---
+
+# fs.c
+
+function naming conventions:
+
+* iget: inode get => find/create a cached inode, ref++
+* iput: inode put/**release** => ref--/clean cached inode
+* idup: inode duplicate => ref++
