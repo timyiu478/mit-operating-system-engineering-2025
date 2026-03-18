@@ -58,3 +58,24 @@ function naming conventions:
 * iget: inode get => find/create a cached inode, ref++
 * iput: inode put/**release** => ref--/clean cached inode
 * idup: inode duplicate => ref++
+
+---
+
+# fs.c
+
+The comments right after pipe, ip, off, and major are telling when these feilds are meaningful.
+E.g. file->off is meaningful if file tpye is FD_INODE.
+
+```c
+  1 struct file {
+  2 enum { FD_NONE, FD_PIPE, FD_INODE, FD_DEVICE } type;
+  3 int ref; // reference count
+  4 char readable;
+  5 char writable;
+  6 struct pipe *pipe; // FD_PIPE
+  7 struct inode *ip; // FD_INODE and FD_DEVICE
+  8 uint off; // FD_INODE
+  9 short major; // FD_DEVICE
+ 10 };
+```
+
