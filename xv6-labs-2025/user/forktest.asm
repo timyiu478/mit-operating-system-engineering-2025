@@ -45,7 +45,7 @@ forktest(void)
 
   print("fork test\n");
   30:	00000517          	auipc	a0,0x0
-  34:	44850513          	addi	a0,a0,1096 # 478 <cpupin+0xe>
+  34:	40850513          	addi	a0,a0,1032 # 438 <symlink+0xe>
   38:	fc9ff0ef          	jal	0 <print>
 
   for(n=0; n<N; n++){
@@ -67,7 +67,7 @@ forktest(void)
   if(n == N){
     print("fork claimed to work N times!\n");
   52:	00000517          	auipc	a0,0x0
-  56:	47650513          	addi	a0,a0,1142 # 4c8 <cpupin+0x5e>
+  56:	43650513          	addi	a0,a0,1078 # 488 <symlink+0x5e>
   5a:	fa7ff0ef          	jal	0 <print>
     exit(1);
   5e:	4505                	li	a0,1
@@ -80,7 +80,7 @@ forktest(void)
     if(wait(0) < 0){
       print("wait stopped early\n");
   68:	00000517          	auipc	a0,0x0
-  6c:	42050513          	addi	a0,a0,1056 # 488 <cpupin+0x1e>
+  6c:	3e050513          	addi	a0,a0,992 # 448 <symlink+0x1e>
   70:	f91ff0ef          	jal	0 <print>
       exit(1);
   74:	4505                	li	a0,1
@@ -91,7 +91,7 @@ forktest(void)
   if(wait(0) != -1){
     print("wait got too many\n");
   7a:	00000517          	auipc	a0,0x0
-  7e:	42650513          	addi	a0,a0,1062 # 4a0 <cpupin+0x36>
+  7e:	3e650513          	addi	a0,a0,998 # 460 <symlink+0x36>
   82:	f7fff0ef          	jal	0 <print>
     exit(1);
   86:	4505                	li	a0,1
@@ -114,7 +114,7 @@ forktest(void)
 
   print("fork test OK\n");
   aa:	00000517          	auipc	a0,0x0
-  ae:	40e50513          	addi	a0,a0,1038 # 4b8 <cpupin+0x4e>
+  ae:	3ce50513          	addi	a0,a0,974 # 478 <symlink+0x4e>
   b2:	f4fff0ef          	jal	0 <print>
 }
   b6:	60e2                	ld	ra,24(sp)
@@ -829,82 +829,12 @@ uptime:
  ret
  428:	8082                	ret
 
-000000000000042a <bind>:
-.global bind
-bind:
- li a7, SYS_bind
- 42a:	48f5                	li	a7,29
+000000000000042a <symlink>:
+.global symlink
+symlink:
+ li a7, SYS_symlink
+ 42a:	48d9                	li	a7,22
  ecall
  42c:	00000073          	ecall
  ret
  430:	8082                	ret
-
-0000000000000432 <unbind>:
-.global unbind
-unbind:
- li a7, SYS_unbind
- 432:	48f9                	li	a7,30
- ecall
- 434:	00000073          	ecall
- ret
- 438:	8082                	ret
-
-000000000000043a <send>:
-.global send
-send:
- li a7, SYS_send
- 43a:	48fd                	li	a7,31
- ecall
- 43c:	00000073          	ecall
- ret
- 440:	8082                	ret
-
-0000000000000442 <recv>:
-.global recv
-recv:
- li a7, SYS_recv
- 442:	02000893          	li	a7,32
- ecall
- 446:	00000073          	ecall
- ret
- 44a:	8082                	ret
-
-000000000000044c <pgpte>:
-.global pgpte
-pgpte:
- li a7, SYS_pgpte
- 44c:	02100893          	li	a7,33
- ecall
- 450:	00000073          	ecall
- ret
- 454:	8082                	ret
-
-0000000000000456 <kpgtbl>:
-.global kpgtbl
-kpgtbl:
- li a7, SYS_kpgtbl
- 456:	02200893          	li	a7,34
- ecall
- 45a:	00000073          	ecall
- ret
- 45e:	8082                	ret
-
-0000000000000460 <rwlktest>:
-.global rwlktest
-rwlktest:
- li a7, SYS_rwlktest
- 460:	02300893          	li	a7,35
- ecall
- 464:	00000073          	ecall
- ret
- 468:	8082                	ret
-
-000000000000046a <cpupin>:
-.global cpupin
-cpupin:
- li a7, SYS_cpupin
- 46a:	02400893          	li	a7,36
- ecall
- 46e:	00000073          	ecall
- ret
- 472:	8082                	ret
