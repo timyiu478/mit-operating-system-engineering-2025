@@ -15,7 +15,9 @@ See https://pdos.csail.mit.edu/6.1810/2025/labs/fs.html
 
 ### Related source code
 
-See 
+* bmap: https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/file-system/xv6-labs-2025/kernel/fs.c#L443-L485
+* itrunc: https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/file-system/xv6-labs-2025/kernel/fs.c#L519-L537
+* https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/file-system/xv6-labs-2025/kernel/fs.h#L27-L41
 
 ### Design Choices
 
@@ -34,7 +36,14 @@ See
 
 ### Related source code
 
-See
+* New system call:
+    * https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/file-system/xv6-labs-2025/kernel/sysfile.c#L536-L608
+    * https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/file-system/xv6-labs-2025/user/user.h#L27
+    * https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/file-system/xv6-labs-2025/user/usys.pl#L45
+* Modify the open system call to handle the case where the path refers to a symbolic link:
+    * https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/file-system/xv6-labs-2025/kernel/sysfile.c#L343-L370
+* New file type: https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/file-system/xv6-labs-2025/kernel/stat.h#L4
+
 
 ### Design Choices
 
