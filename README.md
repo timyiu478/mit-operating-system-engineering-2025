@@ -22,3 +22,7 @@ My completed projects at a glance:
 
 * The combination of page table and page fault handling is powerful. It can be used to build many virtual memory features, such as lazy allocation, copy-on-write fork, and on-demand paging.
 * In xv6, swtch() never returns to its caller's next instruction in the old thread — instead, by restoring the target thread's saved return address (ra) and executing ret, it resumes right after the point where that thread last called swtch() to give up the CPU.
+* The xv6 logging system design and implementation:
+    * The logheader.block[] array encodes three key pieces of information for each logged block: redo order, location of the logged (new) data, and destination (home location) on disk
+    * To clean the log, we only have to zero out the count field of the log header block. No real pruning!
+    * Implementation challeges: buffer eviction, file operation must fits in the log, and concurrent fs calls
