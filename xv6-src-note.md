@@ -79,3 +79,45 @@ E.g. file->off is meaningful if file tpye is FD_INODE.
  10 };
 ```
 
+---
+
+# log.c
+
+log block vs cache block:
+
+* log.lh.block[tail] is a pointer points to the block number given by log_write() function. It lives data region on disk.
+* log.start is the log block number
+    * we can see this value is initialised as sb->logstart in line 60
+ 
+
+```c
+ 53 void
+ 54 initlog(int dev, struct superblock *sb)
+ 55 {
+ 56   if (sizeof(struct logheader) >= BSIZE)
+ 57     panic("initlog: too big logheader");
+ 58
+ 59   initlock(&log.lock, "log");
+ 60   log.start = sb->logstart;
+ 61   log.dev = dev;
+ 62   recover_from_log();
+ 63 }
+...
+...
+178 // Copy modified blocks from cache to log.
+179 static void
+180 write_log(void)
+181 {
+182   int tail;
+183
+184   for (tail = 0; tail < log.lh.n; tail++) {
+185     struct buf *to = bread(log.dev, log.start+tail+1); // log block
+186     struct buf *from = bread(log.dev, log.lh.block[tail]); // cache block
+187     memmove(to->data, from->data, BSIZE);
+188     bwrite(to);  // write the log
+189     brelse(from);
+190     brelse(to);
+191   }
+192 }
+```
+
