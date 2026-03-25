@@ -140,6 +140,9 @@ found:
     return 0;
   }
 
+  // Set up vma base address
+  p->mmap_base = TRAPFRAME;
+
   // Set up new context to start executing at forkret,
   // which returns to user space.
   memset(&p->context, 0, sizeof(p->context));
@@ -239,6 +242,9 @@ growproc(int n)
   uint64 sz;
   struct proc *p = myproc();
 
+  if (p->sz + n >= p->mmap_base)
+    return -1;
+
   sz = p->sz;
   if(n > 0){
     if((sz = uvmalloc(p->pagetable, sz, sz + n, PTE_W)) == 0) {
@@ -272,6 +278,15 @@ kfork(void)
     return -1;
   }
   np->sz = p->sz;
+
+  // Copy VMAs from parent to child
+  for (uint i=0; i < NVMA; i++) {
+    if (p->vma[i].valid) {
+      memmove(&np->vma[i], &p->vma[i], sizeof(struct VMA));
+      // increase file ref count
+      p->vma[i].f = filedup(np->vma[i].f);
+    }
+  }
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
@@ -336,6 +351,20 @@ kexit(int status)
       p->ofile[fd] = 0;
     }
   }
+
+  // Unmap VMAs
+  for (uint i=0; i < NVMA; i++) {
+    struct VMA *vma = &p->vma[i];
+    if (vma->valid == 0)
+      continue;
+    if (uvmunmap_vma(p->pagetable, vma, vma->start, vma->end) == -1)
+      printf("kexit: failed to unmap vma");
+    if (vma->start == p->mmap_base) {
+      p->mmap_base = vma->end;
+    }
+  }
+
+
 
   begin_op();
   iput(p->cwd);

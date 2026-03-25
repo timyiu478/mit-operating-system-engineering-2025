@@ -15,6 +15,7 @@ struct superblock;
 #ifdef LAB_LOCK
 struct rwspinlock;
 #endif
+struct VMA;
 
 // bio.c
 void            binit(void);
@@ -192,6 +193,7 @@ void            vmprint(pagetable_t);
 #ifdef LAB_PGTBL
 pte_t*          pgpte(pagetable_t, uint64);
 #endif
+int             uvmunmap_vma(pagetable_t, struct VMA *, uint64, uint64);
 
 // plic.c
 void            plicinit(void);
