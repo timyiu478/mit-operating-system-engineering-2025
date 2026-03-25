@@ -17,6 +17,7 @@ My completed projects at a glance:
 6. Network Driver - [demo](lab-writeups/06_net_driver.md)
 7. Per-CPU freelists & Read-write lock - [demo](lab-writeups/07_locks.md)
 8. File System - [demo](lab-writeups/08_file_system.md)
+8. Memory-mapped files - [demo](lab-writeups/09_mmap.md)
 
 # Key Takeaways
 
