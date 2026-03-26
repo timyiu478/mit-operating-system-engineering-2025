@@ -334,39 +334,11 @@ sys_open(void)
       return -1;
     }
   }
+
   if(ip->type == T_DEVICE && (ip->major < 0 || ip->major >= NDEV)){
     iunlockput(ip);
     end_op();
     return -1;
-  }
-
-  // Follow the symbolic link
-  // Return -1 if the depth of links reaches some threshold
-  int dol = 0, threshold = 10; // depth of link
-  while(ip->type == T_SYMLINK && (omode & O_NOFOLLOW) == 0) {
-    char tpath[MAXPATH];
-
-    if(readi(ip, 0, (uint64)tpath, 0, sizeof(tpath)) == 0)
-      panic("istargetpathempty: sys_open");
-    iunlockput(ip);
-
-    if((ip = namei(tpath)) == 0){
-      end_op();
-      return -1;
-    }
-    ilock(ip);
-    if(ip->type == T_DIR && omode != O_RDONLY){
-      iunlockput(ip);
-      end_op();
-      return -1;
-    }
-
-    dol += 1;
-    if(dol > threshold) {
-      iunlockput(ip);
-      end_op();
-      return -1;
-    }
   }
 
   if((f = filealloc()) == 0 || (fd = fdalloc(f)) < 0){
@@ -529,80 +501,5 @@ sys_pipe(void)
     fileclose(wf);
     return -1;
   }
-  return 0;
-}
-
-
-uint64
-sys_symlink(void)
-{
-  char path[MAXPATH];
-  char target[MAXPATH];
-  char name[DIRSIZ];
-  struct inode *dp, *ip;
-  uint len;
-
-  if((len = argstr(0, target, MAXPATH)) < 0)
-    return -1;
-
-  if(argstr(1, path, MAXPATH) < 0)
-    return -1;
-
-  // BEGIN
-  begin_op();
-
-  // Find pareent directory of path
-  dp = nameiparent(path, name);
-  if(dp == 0) {
-    end_op();
-    return -1;
-  }
-  ilock(dp);
-
-  // Fail if name already exists
-  if(dirlookup(dp, name, 0) != 0) {
-    iunlockput(dp);
-    end_op();
-    return -1;
-  }
-
-  // Create a path inode
-  ip = ialloc(dp->dev, T_SYMLINK);
-  if(ip == 0) {
-    iunlockput(dp);
-    end_op();
-    return -1;
-  }
-
-  ilock(ip);
-
-  // Write target path to path data block
-  if(writei(ip, 0, (uint64)target, 0, len) != len) {
-    itrunc(ip);
-    iunlockput(dp);
-    iunlockput(ip);
-    end_op();
-    return -1;
-  }
-
-  // Add directory entry
-  if(dirlink(dp, name, ip->inum) < 0) {
-    itrunc(ip);
-    iunlockput(ip);
-    iunlockput(dp);
-    end_op();
-    return -1;
-  }
-
-  // Update inode metadata
-  ip->size = len;
-  ip->nlink = 1;
-  iupdate(ip);
-
-  // End
-  iunlockput(dp);
-  iunlockput(ip);
-  end_op();
-
   return 0;
 }

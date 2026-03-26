@@ -5,8 +5,11 @@
 #include "riscv.h"
 #include "defs.h"
 #include "spinlock.h"
+#include "sleeplock.h"
 #include "proc.h"
 #include "fs.h"
+#include "file.h"
+#include "fcntl.h"
 
 /*
  * the kernel's page table.
@@ -455,8 +458,61 @@ vmfault(pagetable_t pagetable, uint64 va, int read)
   uint64 mem;
   struct proc *p = myproc();
 
-  if (va >= p->sz)
-    return 0;
+  // mmap region?
+  if (va >= p->sz) {
+    // find valid VMA that this VMA's start <= va and va < end
+    uint i = 0;
+    for (; i< NVMA; i++) {
+      if (!p->vma[i].valid)
+        continue;
+      if (p->vma[i].start <= va && va < p->vma[i].end)
+        break;
+    }
+    if (i == NVMA)
+      return 0;
+
+    if (!read && !(p->vma[i].prot & PROT_WRITE)) {
+      // printf("vmfault: unable to write to a read-only memory mapped file\n");
+      p->killed = 1; // fatal fault
+      return -1;
+    }
+
+    va = PGROUNDDOWN(va);
+
+    // allocate a page of physical memory
+    mem = (uint64) kalloc();
+    if(mem == 0)
+      return 0;
+
+    // read at most 4096 bytes of the relevant file into that page
+    uint64 off = va - p->vma[i].start;
+    begin_op();
+    ilock(p->vma[i].f->ip);
+    uint n = readi(p->vma[i].f->ip, 0, mem, p->vma[i].offset + off, PGSIZE);
+    iunlock(p->vma[i].f->ip);
+    end_op();
+
+    // Zero the rest of the page if short read
+    if (n < PGSIZE) {
+      memset((void*)(mem + n), 0, PGSIZE - n);
+    }
+
+    // map it into the user address space with correct permissions
+    int perm = PTE_U;
+    if (p->vma[i].prot & PROT_READ)
+        perm |= PTE_R;
+    if (p->vma[i].prot & PROT_WRITE)
+        perm |= PTE_W;
+    if (p->vma[i].prot & PROT_EXEC)
+        perm |= PTE_X;
+    if (mappages(p->pagetable, va, PGSIZE, mem, perm) != 0) {
+      kfree((void *)mem);
+      return 0;
+    }
+
+    return mem;
+  }
+
   va = PGROUNDDOWN(va);
   if(ismapped(pagetable, va)) {
     return 0;
@@ -482,5 +538,93 @@ ismapped(pagetable_t pagetable, uint64 va)
   if (*pte & PTE_V){
     return 1;
   }
+  return 0;
+}
+
+int
+uvmunmap_vma(pagetable_t pagetable, struct VMA *vma, uint64 addr, uint64 end)
+{
+  if (vma->valid == 0)
+    return -1;
+
+  // No overlap
+  if (vma->end <= addr || vma->start >= end)
+      return -1;
+
+  // Calculate correct unmap range for this VMA
+  uint64 unmap_start = (addr > vma->start) ? addr : vma->start;
+  uint64 unmap_end   = (end < vma->end)    ? end  : vma->end;
+
+  if (unmap_start != vma->start && unmap_end != vma->end) {
+    printf("munmap: cant punch a hole in the middle of a region\n");
+    return -1;
+  }
+  
+  // If the file is mapped MAP_SHARED,
+  // write the dirty page back to the file.
+  if (vma->flags & MAP_SHARED) {
+    uint64 addr = unmap_start;
+    uint offset = vma->offset + (addr - vma->start);
+    pte_t *pte;
+
+    for(; addr < unmap_end; addr += PGSIZE){
+      if((pte = walk(pagetable, addr, 0)) == 0) // leaf page table entry allocated?
+        continue;
+      if((*pte & PTE_V) == 0 || (*pte & PTE_D) == 0)
+        continue;
+
+      // reference: filewrite() in file.c
+      int max = ((MAXOPBLOCKS-1-1-2) / 2) * BSIZE;
+      int r, i = 0, n = PGSIZE;
+      struct file *f = vma->f;
+
+      // write back to file without expanding the file size
+      int size = f->ip->size - offset; // file length starts from offset
+      if (size < 0) {
+        break;
+      } else if (size < n) {
+        n = size;
+      }
+
+      while(i < n){
+        int n1 = n - i;
+        if(n1 > max)
+          n1 = max;
+        begin_op();
+        ilock(f->ip);
+        // printf("write back, vma %p, unmmap_end %p, addr %p, offset %d, file size %d, n %d , n1 %d\n", (void *)vma, (void *)unmap_end, (void *)addr, offset, f->ip->size, n, n1);
+        if ((r = writei(f->ip, 1, addr + i, offset, n1)) > 0)
+          offset += r;
+        iunlock(f->ip);
+        end_op();
+        if(r != n1){
+          // error from writei
+          break;
+        }
+        i += r;
+      }
+      if (i != n)
+        return -1;
+    }
+  }
+
+  // Unmap the pages
+  uvmunmap(pagetable, unmap_start, (unmap_end-unmap_start)/PGSIZE, 1);
+
+  if (unmap_start == vma->start && unmap_end == vma->end) {
+    // Decrease file ref count
+    fileclose(vma->f);
+    // Free the vma
+    vma->valid = 0;
+    // printf("free vma %p\n", (void *)vma);
+  } else if (unmap_start == vma->start) {
+    // Shrink from front
+    vma->offset += (unmap_end - vma->start);
+    vma->start = unmap_end;
+  } else {
+    // Shrink from back
+    vma->end = unmap_start;
+  }
+
   return 0;
 }

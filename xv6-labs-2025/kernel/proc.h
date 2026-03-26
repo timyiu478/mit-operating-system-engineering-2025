@@ -1,3 +1,15 @@
+#define NVMA 16
+
+struct VMA {
+  int  valid; // 0: free, 1: in-use
+  uint64 start; // the address range: [start, end)
+  uint64 end;
+  int  prot; // whether the memory should be mapped readable, writeable, and/or executable. prot is PROT_READ or PROT_WRITE or both
+  int  flags; // MAP_SHARED or MAP_PRIVATE
+  struct file *f; // file pointer
+  int offset; // the starting point in the file at which to map
+};
+
 // Saved registers for kernel context switches.
 struct context {
   uint64 ra;
@@ -104,4 +116,8 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+
+  uint64 mmap_base;            // Current top of the mmap area 
+  struct VMA vma[NVMA];        // VMA array
+   
 };
