@@ -19,6 +19,12 @@ My completed projects at a glance:
 8. File System - [demo](lab-writeups/08_file_system.md)
 8. Memory-mapped files - [demo](lab-writeups/09_mmap.md)
 
+# Readings
+
+My paper writeups at a glance:
+
+1. [Journaling the Linux ext2fs Filesystem](readings/paper-writeups/ext2fs.md)
+
 # Key Takeaways
 
 * The combination of page table and page fault handling is powerful. It can be used to build many virtual memory features, such as lazy allocation, copy-on-write fork, and on-demand paging.
