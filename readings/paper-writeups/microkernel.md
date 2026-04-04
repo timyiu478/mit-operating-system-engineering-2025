@@ -1,6 +1,6 @@
 ---
 title: "The Performance of µ-Kernel-Based Systems"
-description: 
+description: It is possible to design high performance micro kernel systems
 tags: ["kernel design", "IPC"]
 ---
 
@@ -20,23 +20,20 @@ The comparison of L4Linux and monolithic Linux shows that in a practical scenari
 
 Kernel Primitives:
 
-
+![](assets/l4_api.png)
 
 Fast IPC:
 
 ![](assets/l4_fast_ipc.png)
 
----
+Run Linux on top of L4:
 
-# Details
-
-
+![](assets/linux_on_top_of_l4.png)
 
 ---
 
 # Questions
 
-Q. What is one feature/subsystem that's implemented in the kernel in xv6, but is implemented in userspace (i.e., missing from the kernel) in L4? What Unix operations are particularly slow on an L4-based Linux system, and why?
 
 Q. What is micro-kernel?
 
@@ -87,6 +84,10 @@ One IPC design: **asynchronous buffered**
 
 * 4 syscalls
 * context switches: p1 -> p2, p2 <- p1
+
+Q. What are things that Linux is modified such it can run as a user process on top of L4?
+
+Q. What is one feature/subsystem that's implemented in the kernel in xv6, but is implemented in userspace (i.e., missing from the kernel) in L4? What Unix operations are particularly slow on an L4-based Linux system, and why?
 
 ---
 

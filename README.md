@@ -24,6 +24,7 @@ My completed projects at a glance:
 My paper writeups at a glance:
 
 1. [Journaling the Linux ext2fs Filesystem](readings/paper-writeups/ext2fs.md)
+1. [The Performance of µ-Kernel-Based Systems](readings/paper-writeups/microkernel.md)
 
 # Key Takeaways
 
