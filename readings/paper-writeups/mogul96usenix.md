@@ -1,6 +1,6 @@
 ---
 title: "Eliminating Receive Livelock in an Interrupt-driven Kernel"
-description: 
+description: Livelock is a problem of the kernel spends all its time on handling interrupt instead of doing useful work
 tags: ["Livelock", "Interrupt", "Polling", "Network Stack", "Link Layer"]
 ---
 
