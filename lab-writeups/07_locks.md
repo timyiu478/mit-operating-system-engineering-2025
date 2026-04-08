@@ -48,7 +48,7 @@ Implementation reference: https://joeduffyblog.com/2009/01/29/a-singleword-reade
 
 ### Related Source Code
 
-* [spinlock.c](https://github.com/timyiu478/mit-operating-system-engineering-2025/blob/3c51af4168cbfc21f32b19ceb6e4406f7d620a88/xv6-labs-2025/kernel/spinlock.c)
+https://github.com/timyiu478/mit-operating-system-engineering-2025/commit/ab5be3317d0f4a558b5d451c8a68b8c8f0e8e573#diff-03856391f98d43b0a2cb65739196f429f02d3404f5bca94e81597a30ca0ed3b6
 
 ### Design Choices
 
