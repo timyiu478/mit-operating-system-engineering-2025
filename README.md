@@ -26,6 +26,7 @@ My paper writeups at a glance:
 1. [Journaling the Linux ext2fs Filesystem](readings/paper-writeups/ext2fs.md)
 1. [The Performance of µ-Kernel-Based Systems](readings/paper-writeups/microkernel.md)
 1. [Eliminating Receive Livelock in an Interrupt-driven Kernel](readings/paper-writeups/mogul96usenix.md)
+1. [RCU Usage In the Linux Kernel: One Decade Later](readings/paper-writeups/rcu_decade_later.md)
 
 # Key Takeaways
 
