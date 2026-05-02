@@ -1,4 +1,4 @@
-# operating-system-engineering
+# Operating System Engineering
 
 Design and implementation of operating systems, and their use as a foundation for systems programming. Topics include virtual memory; file systems; threads; context switches; kernels; interrupts; system calls; interprocess communication; coordination, and interaction between software and hardware. 
 
@@ -9,15 +9,15 @@ Design and implementation of operating systems, and their use as a foundation fo
 
 My completed projects at a glance:
 
-1. Xv6 and Unix utilities - [demo](lab-writeups/01_utilities.md)
-2. System calls - [demo](lab-writeups/02_sys_calls.md)
-3. Page tables - [demo](lab-writeups/03_page_tables.md)
-4. User-level interrupt/fault handlers - [demo](lab-writeups/04_trap.md)
-5. Copy-on-Write Fork - [demo](lab-writeups/05_cow.md)
-6. Network Driver - [demo](lab-writeups/06_net_driver.md)
-7. Per-CPU freelists & Read-write lock - [demo](lab-writeups/07_locks.md)
-8. File System - [demo](lab-writeups/08_file_system.md)
-8. Memory-mapped files - [demo](lab-writeups/09_mmap.md)
+1. [Xv6 and Unix utilities](lab-writeups/01_utilities.md)
+2. [System calls](lab-writeups/02_sys_calls.md)
+3. [Page tables](lab-writeups/03_page_tables.md)
+4. [User-level interrupt/fault handlers](lab-writeups/04_trap.md)
+5. [Copy-on-Write Fork](lab-writeups/05_cow.md)
+6. [Network Driver](lab-writeups/06_net_driver.md)
+7. [Per-CPU freelists & Read-write lock](lab-writeups/07_locks.md)
+8. [File System](lab-writeups/08_file_system.md)
+9. [Memory-mapped files](lab-writeups/09_mmap.md)
 
 # Readings
 
